@@ -11,6 +11,11 @@ pub fn AABB(comptime T: type) type {
         min: @Vector(3, T),
         max: @Vector(3, T),
 
+        pub const empty = Self {
+            .min = .{0,0,0},
+            .max = .{0,0,0},
+        };
+
         pub const InvDirection = struct {
             inv_direction: @Vector(3, T), // 1 / ray direction
             is_parallel: @Vector(3, bool), // true if ray direction is close to zero

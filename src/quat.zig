@@ -2,8 +2,8 @@ const std = @import("std");
 const vector = @import("vector.zig");
 const meta = @import("meta.zig");
 
-const Quat4f32 = @Vector(4, f32);
-const Quat4f64 = @Vector(4, f64);
+pub const Quat4f32 = @Vector(4, f32);
+pub const Quat4f64 = @Vector(4, f64);
 
 fn map_to_vector(a: anytype) @Vector(meta.array_vector_length(@TypeOf(a)), std.meta.Child(@TypeOf(a))) {
     const type_info = @typeInfo(@TypeOf(a));
@@ -131,7 +131,10 @@ pub fn norm(q: anytype) std.meta.Float(@bitSizeOf(std.meta.Child(@TypeOf(q)))) {
 //}
 
 pub fn conjugate(q: anytype) @TypeOf(q) {
-    if (meta.array_vector_length(@TypeOf(q)) != 4) @compileError("vector must have four elements for conjugate() to be defined");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(q)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(q)).vector.len == 4);
+    }
     return q * @Vector(4, std.meta.Child(@TypeOf(q))){ -1, -1, -1, 1 };
 }
 

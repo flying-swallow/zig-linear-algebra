@@ -9,12 +9,19 @@ pub const Primative = enum {
     Capsule,
 };
 
-
 pub const AABB = @import("geometry/aabb.zig").AABB;
+pub const AABBf32 = AABB(f32);
+pub const AABBf64 = AABB(f64);
+
 pub const Plane = @import("geometry/plane.zig").Plane;
+pub const Planef32 = Plane(f32);
+pub const Planef64 = Plane(f64);
+
 pub const Sphere = @import("geometry/sphere.zig").Sphere;
 pub const Capsule = @import("geometry/capsule.zig").Capsule;
 pub const OrientedBoundedBox = @import("geometry/obb.zig").OrientedBoundedBox;
+
+
 
 pub const overlap = @import("geometry/overlap.zig");
 pub const ray = @import("geometry/ray.zig");

@@ -1,11 +1,11 @@
 const std = @import("std");
 const vector = @import("vector.zig");
-const meta = @import("meta.zig");
+const zla = @import("root.zig");
 
 pub const Quat4f32 = @Vector(4, f32);
 pub const Quat4f64 = @Vector(4, f64);
 
-fn map_to_vector(a: anytype) @Vector(meta.array_vector_length(@TypeOf(a)), std.meta.Child(@TypeOf(a))) {
+fn map_to_vector(a: anytype) @Vector(@typeInfo(@TypeOf(a)).vector.len, std.meta.Child(@TypeOf(a))) {
     const type_info = @typeInfo(@TypeOf(a));
     if (type_info != .vector and type_info != .array) @compileError("Expected vector or array type, got: " ++ @typeName(@TypeOf(a)));
     return a;
@@ -38,7 +38,11 @@ pub fn z_axis(comptime T: type) @Vector(3, T) {
 // Create quaternion that rotates a vector from the direction of inFrom to the direction of inTo along the shortest path
 // @see https://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
 pub fn from_to(from: anytype, to: @TypeOf(from)) @Vector(4, std.meta.Child(@TypeOf(from))) {
-    if (meta.array_vector_length(@TypeOf(from)) != 3) @compileError("Expected a 3D vector type got: " ++ @typeName(@TypeOf(from)));
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(from)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(from)).vector.len == 3);
+    }
+
     //Uses (inFrom = v1, inTo = v2):
 
     //angle = arcos(v1 . v2 / |v1||v2|)
@@ -81,7 +85,10 @@ pub fn from_to(from: anytype, to: @TypeOf(from)) @Vector(4, std.meta.Child(@Type
 }
 
 pub fn get_twist(inAxis: anytype) @Vector(4, std.meta.Child(@TypeOf(inAxis))) {
-    if (meta.array_vector_length(@TypeOf(inAxis)) != 4) @compileError("vector must have four elements for get_twist() to be defined");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(inAxis)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(inAxis)).vector.len == 4);
+    }
 
     const dir = vector.dot(vector.extract(inAxis, 3), inAxis) * inAxis;
     const twist: @Vector(4, std.meta.Child(@TypeOf(inAxis))) = .{ dir[0], dir[1], dir[2], inAxis[3] };
@@ -94,7 +101,10 @@ pub fn get_twist(inAxis: anytype) @Vector(4, std.meta.Child(@TypeOf(inAxis))) {
 
 //TODO: optimize with simd
 pub fn mul(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
-    if (meta.array_vector_length(@TypeOf(a)) != 4) @compileError("quaternion must have 4 elements");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(a)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(a)).vector.len == 4);
+    }
     const inner_a = map_to_vector(a);
     const inner_b = map_to_vector(b);
 
@@ -139,14 +149,21 @@ pub fn conjugate(q: anytype) @TypeOf(q) {
 }
 
 pub fn inverse(q: anytype) @TypeOf(q) {
-    if (meta.array_vector_length(@TypeOf(q)) != 4) @compileError("vector must have four elements for inverse() to be defined");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(q)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(q)).vector.len == 4);
+    }
     return conjugate(q) / @as(@TypeOf(q), @splat(vector.norm(q)));
 }
 
 pub fn slerp(a: anytype, b: anytype, factor: std.meta.Child(@TypeOf(a))) Quat(std.meta.Child(@TypeOf(a))) {
-    if (std.meta.Child(@TypeOf(a)) != std.meta.Child(@TypeOf(b))) @compileError("arg1 and arg2 must be of the same child type");
-    if (meta.array_vector_length(@TypeOf(a)) != 4) @compileError("quaternion must have 4 elements");
-    if (meta.array_vector_length(@TypeOf(b)) != 4) @compileError("quaternions must have 4 elements");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(a)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(a)).vector.len == 4);
+        std.debug.assert(@typeInfo(@TypeOf(b)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(b)).vector.len == 4);
+        std.debug.assert(@TypeOf(a) == @TypeOf(b));
+    }
     const inner_a = map_to_vector(a);
     const inner_b = map_to_vector(b);
     const delta: std.meta.Child(@TypeOf(a)) = 0.0001;
@@ -179,16 +196,23 @@ pub fn slerp(a: anytype, b: anytype, factor: std.meta.Child(@TypeOf(a))) Quat(st
 }
 
 pub fn lerp(a: anytype, b: anytype, factor: std.meta.Child(@TypeOf(a))) Quat(std.meta.Child(@TypeOf(a))) {
-    if (std.meta.Child(@TypeOf(a)) != std.meta.Child(@TypeOf(b))) @compileError("arg1 and arg2 must be of the same child type");
-    if (meta.array_vector_length(@TypeOf(a)) != 4) @compileError("quaternion must have 4 elements");
-    if (meta.array_vector_length(@TypeOf(b)) != 4) @compileError("quaternions must have 4 elements");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(a)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(a)).vector.len == 4);
+        std.debug.assert(@typeInfo(@TypeOf(b)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(b)).vector.len == 4);
+        std.debug.assert(@TypeOf(a) == @TypeOf(b));
+    }
 
     return @as(Quat(std.meta.Child(@TypeOf(a))), @splat(1.0 - factor)) * map_to_vector(a) +
         @as(Quat(std.meta.Child(@TypeOf(a))), @splat(factor)) * map_to_vector(b);
 }
 
 pub fn from_eular_angles(inAngles: anytype) @Vector(4, std.meta.Child(@TypeOf(inAngles))) {
-    if (meta.array_vector_length(@TypeOf(inAngles)) != 3) @compileError("vector must have three elements for from_eular_angles() to be defined");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(inAngles)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(inAngles)).vector.len == 3);
+    }
 
     const half = @as(@TypeOf(inAngles), @splat(0.5)) * inAngles;
     const res = vector.sin_cos(half);
@@ -204,18 +228,20 @@ pub fn from_eular_angles(inAngles: anytype) @Vector(4, std.meta.Child(@TypeOf(in
 }
 
 pub fn from_rotation(axis: anytype, angle: std.meta.Child(@TypeOf(axis))) @Vector(4, std.meta.Child(@TypeOf(axis))) {
-    if (meta.array_vector_length(@TypeOf(axis)) != 3) @compileError("axis must be a 3D vector");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(axis)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(axis)).vector.len == 3);
+    }
     const in_axis = map_to_vector(axis);
     std.debug.assert(vector.is_normalized_default(in_axis));
-    return .{ 
-        in_axis[0] * std.math.sin(angle * 0.5), 
-        in_axis[1] * std.math.sin(angle * 0.5), 
-        in_axis[2] * std.math.sin(angle * 0.5), 
-        std.math.cos(angle * 0.5) };
+    return .{ in_axis[0] * std.math.sin(angle * 0.5), in_axis[1] * std.math.sin(angle * 0.5), in_axis[2] * std.math.sin(angle * 0.5), std.math.cos(angle * 0.5) };
 }
 
 pub fn to_eular_angles(q: anytype) @Vector(3, std.meta.Child(@TypeOf(q))) {
-    if (meta.array_vector_length(@TypeOf(q)) != 4) @compileError("vector must have four elements for to_eular_angles() to be defined");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(q)) == .vector);
+        std.debug.assert(@typeInfo(@TypeOf(q)).vector.len == 4);
+    }
 
     const ysqr = q[1] * q[1];
 
@@ -249,10 +275,10 @@ test mul {
 
 test slerp {
     const v1 = identity(f32);
-    const v2: Quat4f32 = from_rotation(x_axis(f32), 0.99 * std.math.pi);
+    const v2: Quat4f32 = from_rotation(zla.Vec3f32{ 1, 0, 0 }, 0.99 * std.math.pi);
     try std.testing.expect(vector.is_close_default(slerp(v1, v2, 0.25), from_rotation(x_axis(f32), 0.25 * 0.99 * std.math.pi)));
 
-    const v3 = vector.normalize(Quat4f32{1, 2, 3, 4});
+    const v3 = vector.normalize(Quat4f32{ 1, 2, 3, 4 });
     try std.testing.expect(vector.is_close_default(slerp(v3, -v3, 0.5), v3));
 }
 

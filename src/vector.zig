@@ -6,7 +6,6 @@ const std = @import("std");
 const Float = std.meta.Float;
 
 const Mat = @import("matrix.zig").Mat;
-const meta = @import("meta.zig");
 const testing = @import("testing.zig");
 
 pub const Vec4f32 = @Vector(4, f32);
@@ -17,16 +16,19 @@ pub const Vec4f64 = @Vector(4, f64);
 pub const Vec3f64 = @Vector(3, f64);
 pub const Vec2f64 = @Vector(2, f64);
 
-pub fn to_mat(vec: anytype) Mat(std.meta.Child(@TypeOf(vec)), 1, meta.array_vector_length(@TypeOf(vec))) {
-    var result: Mat(std.meta.Child(@TypeOf(vec)), 1, meta.array_vector_length(@TypeOf(vec))) = .zero;
-    inline for (0..meta.array_vector_length(@TypeOf(vec))) |i| {
+pub fn to_mat(vec: anytype) Mat(std.meta.Child(@TypeOf(vec)), 1, @typeInfo(@TypeOf(vec)).vector.len) {
+    var result: Mat(std.meta.Child(@TypeOf(vec)), 1, @typeInfo(@TypeOf(vec)).vector.len) = .zero;
+    inline for (0..@typeInfo(@TypeOf(vec)).vector.len) |i| {
         result.items[0][i] = vec[i];
     }
     return result;
 }
 
 pub fn extract(vec: anytype, comptime len: usize) @Vector(len, std.meta.Child(@TypeOf(vec))) {
-    if (len > meta.array_vector_length(@TypeOf(vec))) @compileError("extract: length out of bounds");
+    comptime {
+        std.debug.assert(@typeInfo(@TypeOf(vec)) == .vector);
+        std.debug.assert(len <= @typeInfo(@TypeOf(vec)).vector.len);
+    }
     var result: @Vector(len, std.meta.Child(@TypeOf(vec))) = undefined;
     inline for (0..len) |i| {
         result[i] = vec[i];
@@ -87,7 +89,7 @@ pub fn norm_sqr_adv(vec: anytype, comptime precision: u8) Float(precision) {
     } else {
         const items: blk: {
             if (precision > @bitSizeOf(T)) {
-                break :blk @Vector(meta.array_vector_length(@TypeOf(vec)), Float(precision));
+                break :blk @Vector(@typeInfo(@TypeOf(vec)).vector.len, Float(precision));
             } else {
                 break :blk @TypeOf(vec);
             }
@@ -126,7 +128,7 @@ pub fn norm_adv(vec: anytype, comptime precision: u8) Float(precision) {
     } else {
         const items: blk: {
             if (precision > @bitSizeOf(T)) {
-                break :blk @Vector(meta.array_vector_length(@TypeOf(vec)), Float(precision));
+                break :blk @Vector(@typeInfo(@TypeOf(vec)).vector.len, Float(precision));
             } else {
                 break :blk @TypeOf(vec);
             }

@@ -48,8 +48,8 @@ pub fn AABB(comptime T: type) type {
         pub fn translate(self: Self, translation: @Vector(3, T)) Self {
             std.debug.assert(@reduce(.And, self.min <= self.max));
             return .{
-                .min = Self.min + translation,
-                .max = Self.max + translation,
+                .min = self.min + translation,
+                .max = self.max + translation,
             };
         }
 
@@ -71,7 +71,7 @@ pub fn AABB(comptime T: type) type {
 
         pub fn get_center(self: @This()) @Vector(3, T) {
             std.debug.assert(@reduce(.And, self.min <= self.max));
-            return (self.min + self.max) * (@as(T, 0.5));
+            return (self.min + self.max) * @as(@Vector(3, T), @splat(0.5));
         }
 
         pub fn get_size(self: @This()) @Vector(3, T) {

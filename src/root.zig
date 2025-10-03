@@ -1,18 +1,26 @@
-pub const vec = @import("vector.zig");
-pub const quat = @import("quat.zig");
-pub const Mat = @import("matrix.zig").Mat;
+const matrix = @import("matrix.zig");
 const std = @import("std");
 
-const Vec4f32 = vec.Vec4f32;
-const Vec3f32 = vec.Vec3f32;
-const Vec2f32 = vec.Vec2f32;
+pub const vec = @import("vector.zig");
+pub const quat = @import("quat.zig");
+pub const Mat = matrix.Mat;
 
-const Vec4f64 = vec.Vec4f64;
-const Vec3f64 = vec.Vec3f64;
-const Vec2f64 = vec.Vec2f64;
+pub const Vec4f32 = vec.Vec4f32;
+pub const Vec3f32 = vec.Vec3f32;
+pub const Vec2f32 = vec.Vec2f32;
 
-const Quat4f32 = quat.Quat4f32;
-const Quat4f64 = quat.Quat4f64;
+pub const Vec4f64 = vec.Vec4f64;
+pub const Vec3f64 = vec.Vec3f64;
+pub const Vec2f64 = vec.Vec2f64;
+
+pub const Quat4f32 = quat.Quat4f32;
+pub const Quat4f64 = quat.Quat4f64;
+
+pub const Mat4f32 = matrix.Mat4f32;
+pub const Mat4f64 = matrix.Mat4f64;
+
+pub const Mat3f32 = Mat(f32, 3, 3);
+pub const Mat3f64 = Mat(f64, 3, 3);
 
 pub const geom = @import("geometry.zig");
 
